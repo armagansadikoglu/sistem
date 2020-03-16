@@ -4,41 +4,49 @@
 #include "./lib/fields.h"
 #include "./lib/node.h"
 #include "./lib/jval.h"
+
 int main(int argc, char **argv)
 {
+  /* Program içerisinde ihtiyaç duyulan değişkenler */
   IS is;
-  
-  int satirSayisi=0;
+
+  int satirSayisi = 0;
   int initial_range;
   int jump_range;
   int num_jumps;
   int initial_power;
   double power_reduction;
-  
-  
-  if (argc != 7) { fprintf(stderr, "usage: printwords filename\n"); exit(1); }
-  else {
+
+  /* Argüman sayısının 6 olduğu kontrol ediliyor */
+
+  if (argc != 6)
+  {
+    fprintf(stderr, "usage: cheal initial_range jump_range num_jumps initial_power power_reduction < input_file\n");
+    exit(1);
+  }
+
+  else
+  {
     initial_range = atoi(argv[1]);
     jump_range = atoi(argv[2]);
     num_jumps = atoi(argv[3]);
     initial_power = atoi(argv[4]);
     power_reduction = atof(argv[5]);
-    
-  }
- 
-  is = new_inputstruct(argv[6]);
-  if (is == NULL) {
-    perror(argv[6]);
-    exit(1);
   }
 
+  /* DOSYA OKUMA İŞLEMLERİ */
+
+  is = new_inputstruct(NULL);
+
   while(get_line(is) > 0) {
-    //printf("%s %s %s %s %s \n", is->fields[0],is->fields[1],is->fields[2],is->fields[3],is->fields[4]);
-    satirSayisi++; // satir sayisini öğrenip bellekte yer ayıracağız
+    satirSayisi++;
   }
-  jettison_inputstruct(is); // dosyayı tekrar okumak için kapattık
-  
-  
+
+  jettison_inputstruct(is);
+
+
+  /*
+
   Node* nodes[satirSayisi];
   for (int i = 0; i < satirSayisi; i++)
   {
@@ -48,8 +56,6 @@ int main(int argc, char **argv)
    is = new_inputstruct(argv[6]);// tekrar okumak için açma
    int i =0; // indexte dönmek için
 
-
-  /* 
   while(get_line(is) > 0) {
      
       nodes[i]->x = atoi(is->fields[0]);
@@ -63,8 +69,8 @@ int main(int argc, char **argv)
       printf("%d",i);
     
   }
+
   */
-  
-  jettison_inputstruct(is);
+
   exit(0);
 }
