@@ -34,43 +34,31 @@ int main(int argc, char **argv)
     power_reduction = atof(argv[5]);
   }
 
+  
   /* DOSYA OKUMA İŞLEMLERİ */
 
   is = new_inputstruct(NULL);
 
-  while(get_line(is) > 0) {
-    satirSayisi++;
+  satirSayisi = get_line(is); // text dosyasındaki satır sayısı
+  int satirSayac = 0;
+
+  Node nodes[satirSayisi];
+  
+  while(get_line(is) >= 0) {  // satır sayısı kadar dönüyor
+    nodes[satirSayac].x = atoi(is->fields[0]);
+    nodes[satirSayac].y = atoi(is->fields[1]);
+    nodes[satirSayac].cur_PP = atoi(is->fields[2]);
+    nodes[satirSayac].max_PP = atoi(is->fields[3]);
+    nodes[satirSayac].name = is->fields[4];
+
+    // kontrol için
+    printf("%d %d %d %d %s", nodes[satirSayac].x, nodes[satirSayac].y, nodes[satirSayac].cur_PP, nodes[satirSayac].max_PP, nodes[satirSayac].name);
+    printf("\n");
+
+    satirSayac++;
   }
 
   jettison_inputstruct(is);
-
-
-  /*
-
-  Node* nodes[satirSayisi];
-  for (int i = 0; i < satirSayisi; i++)
-  {
-    nodes[i] = malloc(sizeof(Node));
-  }
-
-   is = new_inputstruct(argv[6]);// tekrar okumak için açma
-   int i =0; // indexte dönmek için
-
-  while(get_line(is) > 0) {
-     
-      nodes[i]->x = atoi(is->fields[0]);
-      nodes[i]->y = atoi(is->fields[1]);
-      nodes[i]->cur_PP = atoi(is->fields[2]);
-      nodes[i]->max_PP = atoi(is->fields[3]);
-      strcpy(nodes[i]->name,is->fields[4]);
-      //node[i]->name = &(is->fields[4]);
-      printf("%s \n",nodes[i]->name);
-      i++;
-      printf("%d",i);
-    
-  }
-
-  */
 
   exit(0);
 }
