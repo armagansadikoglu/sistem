@@ -1,7 +1,7 @@
 CC = gcc
-CLASSDIR = $(HOME)
+CLASSDIR = $(HOME)/sistem
 INCLUDE = -I$(CLASSDIR)/include/
-LIBS = $(CLASSDIR)/objs/libfdr.a
+LIBS = $(CLASSDIR)/libfdr.a
 EX = cheal 
 
 all: $(EX)
