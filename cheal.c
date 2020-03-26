@@ -4,61 +4,63 @@
 #include "./lib/fields.h"
 #include "./lib/node.h"
 #include "./lib/jval.h"
-
 int main(int argc, char **argv)
 {
-  /* Program içerisinde ihtiyaç duyulan değişkenler */
   IS is;
-
-  int satirSayisi = 0;
+  
+  int satirSayisi=0;
   int initial_range;
   int jump_range;
   int num_jumps;
   int initial_power;
   double power_reduction;
+  
 
-  /* Argüman sayısının 6 olduğu kontrol ediliyor */
-
-  if (argc != 6)
-  {
-    fprintf(stderr, "usage: cheal initial_range jump_range num_jumps initial_power power_reduction < input_file\n");
-    exit(1);
-  }
-
-  else
-  {
+  if (argc != 7) { fprintf(stderr, "usage: printwords filename\n"); exit(1); }
+  else {
     initial_range = atoi(argv[1]);
     jump_range = atoi(argv[2]);
     num_jumps = atoi(argv[3]);
     initial_power = atoi(argv[4]);
     power_reduction = atof(argv[5]);
+    
+  }
+ 
+  is = new_inputstruct(argv[6]);
+  if (is == NULL) {
+    perror(argv[6]);
+    exit(1);
+  }
+  // Dosyayı okuyup satır sayısını alıyoruz
+  while(get_line(is) > 0) {
+    satirSayisi++; // satir sayisini öğrenip bellekte yer ayıracağız
   }
 
+  // rewind ile dosyanın başına gelindi. Kapatıp açmadan kaynaklı çökmenin önüne geçildi.
+  rewind(is->f);
   
-  /* DOSYA OKUMA İŞLEMLERİ */
-
-  is = new_inputstruct(NULL);
-
-  satirSayisi = get_line(is); // text dosyasındaki satır sayısı
-  int satirSayac = 0;
-
-  Node nodes[satirSayisi];
-  
-  while(get_line(is) >= 0) {  // satır sayısı kadar dönüyor
-    nodes[satirSayac].x = atoi(is->fields[0]);
-    nodes[satirSayac].y = atoi(is->fields[1]);
-    nodes[satirSayac].cur_PP = atoi(is->fields[2]);
-    nodes[satirSayac].max_PP = atoi(is->fields[3]);
-    nodes[satirSayac].name = is->fields[4];
-
-    // kontrol için
-    printf("%d %d %d %d %s", nodes[satirSayac].x, nodes[satirSayac].y, nodes[satirSayac].cur_PP, nodes[satirSayac].max_PP, nodes[satirSayac].name);
-    printf("\n");
-
-    satirSayac++;
+  Node* nodes[satirSayisi];
+  for (int i = 0; i < satirSayisi; i++)
+  {
+    nodes[i] = malloc(sizeof(Node));
   }
+   int i =0; // indexte dönmek için (foreach etkisi)
 
+  while(get_line(is) > 0) {
+     
+      nodes[i]->x = atoi(is->fields[0]);
+      nodes[i]->y = atoi(is->fields[1]);
+      nodes[i]->cur_PP = atoi(is->fields[2]);
+      nodes[i]->max_PP = atoi(is->fields[3]);
+      // node.h'da name pointer yerine direk 1000 boyutlu diziye çevrildi. Artık çökmüyor.
+      strcpy(nodes[i]->name,is->fields[4]);
+      printf("%s \n",nodes[i]->name);
+      i++;
+     
+    
+  }
+  
+  
   jettison_inputstruct(is);
-
   exit(0);
 }
