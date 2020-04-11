@@ -9,7 +9,7 @@ clean:
 	rm -f $(EX) *.o
 
 cheal: cheal.o $(LIBS)
-	$(CC) $(INCLUDE) -o cheal cheal.o $(LIBS)
+	$(CC) $(INCLUDE) -o cheal cheal.o $(LIBS) -lm
 
 
 .SUFFIXES: .c .o

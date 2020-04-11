@@ -4,4 +4,8 @@ typedef struct node
   int x, y;
   int cur_PP, max_PP;
   struct node *prev;
-} Node;
+  int adj_size;
+  int visited;
+  struct node **adj_list; /*This points to the players adjacent list*/
+  int healing;
+} player;
