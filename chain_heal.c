@@ -2,13 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "./lib/fields.h"
-#include "./lib/bilgi.h"
-#include "./lib/node.h"
-#include "./lib/jval.h"
+#include "./include/fields.h"
+#include "./include/bilgi.h"
+#include "./include/node.h"
+#include "./include/jval.h"
 
 
-/*This struct will be used to hold global information*/
 
 /* işlemdeki oyuncunun tüm çocukları arasında DFS araması yapılacak */
 
@@ -25,7 +24,7 @@ int main( int argc, char** argv)
 
 	char hldr[100];
 
-	double dist;
+	double mesafe;
 
 	int oyuncu_sayisi, x, y, c_pp, mx_pp, i, j;
 
@@ -40,9 +39,9 @@ int main( int argc, char** argv)
 	bg *bilgi = malloc(sizeof(bg));				/* bilgiler için yer ayırılıyor */
 
 	bilgi->sicrama_sayisi = atoi(argv[3]);		/* yapılacak sıçrama sayısı (num_jumps) atanıyor */
-	bilgi->c_pp = atoi(argv[4]);				/* initial_power atanıyor */
+	bilgi->ziplamadaki_iyilestirme = atoi(argv[4]);				/* initial_power atanıyor */
 	sscanf(argv[5],"%lf",&bilgi->guc_azalma_katsayisi);		/* güç azalma katsayısı atanıyor */
-	bilgi->amnt_heal = 0;						/* ??? */
+	bilgi->dfs_basilan_can = 0;						/* ??? */
 	bilgi->toplam_iyilesme = 0;					/* toplam iyileşme (hedef) */
 
 	// sıçrama sayısı kadar oyuncu yeri ayrılıyor
@@ -63,8 +62,8 @@ int main( int argc, char** argv)
 		pp->y = y;	// y değeri atanıyor
 		pp->mevcut_PP = c_pp;	// mevcut gücü atanıyor
 		pp->max_PP = mx_pp;	// maksimum gücü atanıyor
-		pp->ziyare_edildi = -1;	// ziyaret edildi mi(-1 ise edilmedi)
-		pp->healing = 0;	// iyileştirme başlangıçta 0 atanıyor
+		pp->ziyaret_edildi = -1;	// ziyaret edildi mi(-1 ise edilmedi)
+		pp->iyilestirme = 0;	// iyileştirme başlangıçta 0 atanıyor
 		pp->adj_size = 0;	// bitişik boyutu 0 atanıyor
 		strcpy(pp->name, hldr);	// adı kopyalanıyor
 		pp->onceki = onceki_temp;	// önceki düğüm (ilk düğümde NULL)
@@ -98,8 +97,9 @@ int main( int argc, char** argv)
 	
 	for( i = 0; i < oyuncu_sayisi; i++)
 	{
-		// check the needed size of adjacent array for current node
-		// by going through and counting how many are possible based on the distance from current node
+		
+		// Mesafeye bağlı olarak mevcut node'dan atlamanın yapılabileceği nodelar bulunuyor
+		// Array için boyut hesaplanıyor
 		
 		for(j = 0; j < oyuncu_sayisi; j++)
 		{
@@ -110,12 +110,13 @@ int main( int argc, char** argv)
 				// pow(üzerini almada kullanılıyor)
 				x = pow((double) ( (*nodes[i]).x - (*nodes[j]).x) ,2);
 				y = pow( (double) ( (*nodes[i]).y - (*nodes[j]).y) ,2);
-				dist = ( sqrt( x + y) );
+				mesafe = ( sqrt( x + y) );
 
-				/*check for those players that are within jump range if so add to edges temporarily and increment cnt*/
+				
 				
 				// eğer jump_range değerinden kısaysa veya eşitse kenarlara atanıyor
-				if(dist <= atoi(argv[2])) 
+				// dizi için gereken boyut değişkeni arttırılıyor
+				if(mesafe <= atoi(argv[2])) 
 				{
 					edges[ nodes[i]->adj_size] = nodes[j];	
 					
@@ -135,20 +136,18 @@ int main( int argc, char** argv)
 
 	}
 
-	/*check the distance of the each node from Urgosa and if it is 
-	  within the initial cast range perform DFS on it to enumerate all 
-	  possible paths of healing and find the one with the most pp healed*/
 
-
+	// Her bir node'un Urgosa'ya olan mesafesine bakılıp initial değerinde olanlar için DFS'i çalıştır
+	// En yüksek iyileştirmeli olanı bul
 	for(i = 0; i < oyuncu_sayisi ; i++)
 	{
 		
 		x = pow( ( (double) ( (*Lokman_Hekim).x - (*nodes[i]).x ) ), 2 );
 		y = pow( ( (double) ( (*Lokman_Hekim).y - (*nodes[i]).y ) ), 2 );
 
-		dist = ( sqrt(x + y) );
+		mesafe = ( sqrt(x + y) );
 
-		if(dist <= atoi(argv[1])) 
+		if(mesafe <= atoi(argv[1])) 
 		{
 			
 			DFS( nodes[i] , 1 , bilgi, 0 ,NULL); 
@@ -156,9 +155,10 @@ int main( int argc, char** argv)
 		}
 	}
 
-	/*Now print the best path with the name of the player and the amount they were healed. 
-	  Then print out the total healing done*/
-	for(i = 0; i < bilgi->best_path_length ;i++)
+	
+
+	  // En iyi yola ait iyileştirme
+	for(i = 0; i < bilgi->en_iyi_yol_uzunluk ;i++)
 	{
 		printf("%s %d\n", (bilgi->en_iyi_yol[i])->name, bilgi->iyilesme[i] );
 	}
@@ -168,114 +168,115 @@ int main( int argc, char** argv)
 	return 0;
 }
 
+/////////
 
-
-void DFS( oyuncu * pp, int hop, bg * bilgi, int ttl_heal, oyuncu * from)
+void DFS( oyuncu * pp, int mevcut_sicrama, bg * bilgi, int toplam_iyilestirme, oyuncu * onceki_oyuncu)
 {
-	int i, j, rslt, dfs_heal, old_pp, cnt;
+	int i, j, sonuc, dfs_iyilestirme, eski_pp, cnt;
 	
 	oyuncu * ptr;
 
-	double prv_pp, num;
+	double onceki_pp, num;
 
 	cnt = 0;
 
-	/*if the node has already been visited in this dfs just return*/
-	if( (*pp).ziyare_edildi != -1) return;
 	
-	/*Check to make sure that the hop limit is not exceeded if so just return*/
-	if( hop > bilgi->sicrama_sayisi)
+	// Node (oyuncu) daha önce ziyaret edildiyse atla
+	if( (*pp).ziyaret_edildi != -1) return;
+	
+	// Sıçrama sayısı aşmadığından emin olunuyor
+	if( mevcut_sicrama > bilgi->sicrama_sayisi)
 	{
 		return;
 	}
 
-	(*pp).ziyare_edildi = 1;
+	(*pp).ziyaret_edildi = 1;
 
-	(*pp).onceki = from;					/*set the previous field to the node that came before*/
+	(*pp).onceki = onceki_oyuncu;					//Atlanılan nodeun adresini tut
 	
 
-	/*Save the state of the player and heal amounts before the DFS*/
-	old_pp = (*pp).mevcut_PP;			
+	
+	// playerın bilgilerini ve yapılan iyileşirmesi kayıt ediliyor
+	eski_pp = (*pp).mevcut_PP;			
 
-	prv_pp = bilgi->c_pp;					
+	onceki_pp = bilgi->ziplamadaki_iyilestirme;					
 
-	dfs_heal = bilgi->amnt_heal;			
+	dfs_iyilestirme = bilgi->dfs_basilan_can;			
 	
 	
 	
-	/*get how much healing would occur if the max is not exceeded*/
-	rslt = bilgi->c_pp + pp->mevcut_PP;	
+	// iyileştrime yapılıyor
+	sonuc = bilgi->ziplamadaki_iyilestirme + pp->mevcut_PP;	
 
 
-	/*the below will make sure the players max pp is not exceeded, and calculate
-	  the appropriate amount of healing done one the current node and thus far.
-	  It also sets the currents nodes new pp*/
-	if( rslt > (*pp).max_PP)
+
+
+	  // iyileştirmede maksimum değeri aşmadığının kontrolü
+	if( sonuc > (*pp).max_PP)
 	{
-		bilgi->amnt_heal += (*pp).max_PP - (*pp).mevcut_PP;	
-		pp->healing  = (*pp).max_PP - (*pp).mevcut_PP;
-		ttl_heal += (*pp).max_PP - (*pp).mevcut_PP;	
+		bilgi->dfs_basilan_can += (*pp).max_PP - (*pp).mevcut_PP;	
+		pp->iyilestirme  = (*pp).max_PP - (*pp).mevcut_PP;
+		toplam_iyilestirme += (*pp).max_PP - (*pp).mevcut_PP;	
 		(*pp).mevcut_PP = (*pp).max_PP;			
 
 	}
 	else
 	{
-		bilgi->amnt_heal += rint( bilgi->c_pp );					
-		ttl_heal += rint( bilgi->c_pp );					
-		(*pp).mevcut_PP = rslt;						
+		bilgi->dfs_basilan_can += rint( bilgi->ziplamadaki_iyilestirme );					
+		toplam_iyilestirme += rint( bilgi->ziplamadaki_iyilestirme );					
+		(*pp).mevcut_PP = sonuc;						
 
-		pp->healing  = rint(bilgi->c_pp);
+		pp->iyilestirme  = rint(bilgi->ziplamadaki_iyilestirme);
 		
 	}
 
-	
-	/*now check this new total heal amount against your best heal and if it beats it replace the old with the new
-	  and store the path that got you here*/
-	if( ttl_heal > bilgi->toplam_iyilesme)
+	// yolları kıyaslama
+	if( toplam_iyilestirme > bilgi->toplam_iyilesme)
 	{
 
-		bilgi->toplam_iyilesme = ttl_heal;
+		bilgi->toplam_iyilesme = toplam_iyilestirme;
 
 
-		bilgi->best_path_length = hop;
+		bilgi->en_iyi_yol_uzunluk = mevcut_sicrama;
 
 
 		ptr = pp;
 
-		for( i = bilgi->best_path_length - 1 ; i >= 0 ; i--)
+		for( i = bilgi->en_iyi_yol_uzunluk - 1 ; i >= 0 ; i--)
 		{
 			(bilgi->en_iyi_yol[i]) = ptr;
 
-			(bilgi->iyilesme[i]) = ptr->healing;
+			(bilgi->iyilesme[i]) = ptr->iyilestirme;
 
 			ptr = ptr->onceki;
 		}
 
 	}
 	
-	//adjust the next jumps pp healed using the power reduction
-	bilgi->c_pp =  bilgi->c_pp * (1 - (bilgi->guc_azalma_katsayisi)) ;
+	//power reduction kat sayısına göre bir sonraki iyiliştirmede kullanılabilecek puan
+	bilgi->ziplamadaki_iyilestirme =  bilgi->ziplamadaki_iyilestirme * (1 - (bilgi->guc_azalma_katsayisi)) ;
 
 
 	for(i = 0; i < (*pp).adj_size ; i++)
 	{
 		ptr = (*pp).adj_list[i];		
 
-		DFS( ptr, hop+1, bilgi, ttl_heal ,pp);
+		DFS( ptr, mevcut_sicrama+1, bilgi, toplam_iyilestirme ,pp);
 
 	}
 
 
 
-	//set everything back to the way it was
+	
+	// sonraki çalıştırma için sıfırlama
 
-	(*pp).ziyare_edildi = -1;
+	(*pp).ziyaret_edildi = -1;
 
-	bilgi->c_pp = prv_pp;
+	bilgi->ziplamadaki_iyilestirme = onceki_pp;
 
-	bilgi->amnt_heal = dfs_heal;
+	bilgi->dfs_basilan_can = dfs_iyilestirme;
 
-	(*pp).mevcut_PP = old_pp;
+	(*pp).mevcut_PP = eski_pp;
 
 	return;
 }
