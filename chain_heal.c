@@ -32,7 +32,7 @@ int main( int argc, char** argv)
 
 	oyuncu * onceki_temp = NULL;						/* geçici olarak kullanılacak*/
 
-	oyuncu * Lokman_Hekim = NULL;				/* Lokman Hekimi gösteren oyuncu işaretçisi */
+	oyuncu * Lokman_Hekim = malloc(sizeof(oyuncu));				/* Lokman Hekimi gösteren oyuncu işaretçisi */
 
 	oyuncu_sayisi = 0;
 	
@@ -141,10 +141,11 @@ int main( int argc, char** argv)
 	// En yüksek iyileştirmeli olanı bul
 	for(i = 0; i < oyuncu_sayisi ; i++)
 	{
-		
+		// x ve y uzaklıklarının karesi alınıyor
 		x = pow( ( (double) ( (*Lokman_Hekim).x - (*nodes[i]).x ) ), 2 );
 		y = pow( ( (double) ( (*Lokman_Hekim).y - (*nodes[i]).y ) ), 2 );
 
+		// karekök ile mesafe ölçülüyor
 		mesafe = ( sqrt(x + y) );
 
 		if(mesafe <= atoi(argv[1])) 
@@ -154,7 +155,6 @@ int main( int argc, char** argv)
 		
 		}
 	}
-
 	
 
 	  // En iyi yola ait iyileştirme
@@ -168,7 +168,9 @@ int main( int argc, char** argv)
 	return 0;
 }
 
-/////////
+/*
+ * DEPTH FIRST SEARCH (DERİN ÖNCELİKLİ ARAMA) yapılıyor
+ */
 
 void DFS( oyuncu * pp, int mevcut_sicrama, bg * bilgi, int toplam_iyilestirme, oyuncu * onceki_oyuncu)
 {
@@ -264,9 +266,6 @@ void DFS( oyuncu * pp, int mevcut_sicrama, bg * bilgi, int toplam_iyilestirme, o
 		DFS( ptr, mevcut_sicrama+1, bilgi, toplam_iyilestirme ,pp);
 
 	}
-
-
-
 	
 	// sonraki çalıştırma için sıfırlama
 
